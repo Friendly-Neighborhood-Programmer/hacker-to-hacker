@@ -8,7 +8,7 @@ class User:
         pass
 
 
-class File:
+class FileByteStream:
     def __init__(self, name, hash, size, chunk_size):
         self.name = name
         self.hash = hash # todo implement hash later
