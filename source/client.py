@@ -4,6 +4,7 @@ from structures import FileByteStream, User
 import os
 import pickle as pkl
 from threading import Lock
+from download import completeFileRequest
 
 currentNetworkFiles = {}
 networkFilesLock = Lock()
@@ -145,9 +146,15 @@ def testing():
         #run override code
         print("override")
 
+def loopPing():
+    while True:
+        pingTracker()
+
 def main():
     #TODO start daniels thread code
-    
+    pingServer = threading.Thread(target=loopPing, args=())
+    pingServer.daemon = True
+    pingServer.start()
 
     while True:
         global networkFilesLock
@@ -160,7 +167,7 @@ def main():
         fileName = input("Which file would you like to download? or type q to quit: ")
         if (fileName == 'q'):
             break
-        newThread = threading.Thread(target=request_data, args=(fileName))
+        newThread = threading.Thread(target=completeFileRequest, args=(fileName))
         newThread.daemon = True
         newThread.start()
 
