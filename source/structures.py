@@ -1,6 +1,6 @@
 class User:
     def __init__(self, ip, port = 50001):
-        self.ip
+        self.ip = ip
         self.port = port
         self.files = []
 

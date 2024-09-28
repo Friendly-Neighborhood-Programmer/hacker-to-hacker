@@ -1,4 +1,4 @@
-from socket import socket
+import socket
 import threading
 import structures
 
@@ -10,43 +10,42 @@ import structures
 files = {}
 users = {}
 
-#Handle file resquests through a socket
-def requestSocket(portNumber):
+#Handle maintenance signals through threaded socket
+def connectSocket(portNumber):
     print("File requests socket is open")
     s = socket()
     s.bind(('localhost', portNumber))
     s.listen(1)
+    
+    
     c, a = s.accept()
     
-    ip = c.recv(256)
-    #Accept ip, then list of files
-    usrFiles = c.recv(2048)
+    #Need ip, port, list of filenames and sizes
+    #will be recieving User object
     
-    # file1 = structures.File("file1", 0, 2048, 512)
     
-    # file2 = structures.File("file2", 0, 2048, 512)
-    
-    # file3 = structures.File("file3", 0, 2048, 512)
-    
-    # ip = "12.34.567"
-    
-    # usrFiles = [file1, file2, file3]
+    acceptedUser = structures.User
     
     #send through ip and files
-    users.update({ip:usrFiles})
+    users.update({acceptedUser.ip:acceptedUser.files})
     
     #Add user to each file
-    for file in usrFiles:
+    for file in acceptedUser.files:
         if files.keys().__contains__(file.name):
             newIps = files[file.name]
-            newIps.append(ip)
+            newIps.append(acceptedUser.ip)
             files.update({file.name: newIps})
         else:
-            newList = [ip]
+            newList = [acceptedUser.ip]
             files.update({file.name: newList})
+        
+    
         
     print(files)
     
     
+#Handle file resquests through a socket
 
-#Handle maintenance signals through threaded socket
+t1 = threading.Thread(target=connectSocket, args=(50000,),name='t1')
+t1.daemon = True
+t1.start()
