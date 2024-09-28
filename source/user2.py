@@ -8,7 +8,7 @@ try:
         awaitUploadRequest()
     else:
         pingTracker()
-        completeFileRequest("../files/tosend.png", fileInfo)
+        
 
 except KeyboardInterrupt:
     #run override code

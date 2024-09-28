@@ -163,7 +163,9 @@ def main():
     pingServer.start()
 
     while True:
-        sleep(10)
+        sleep(5)
+        completeFileRequest("../files/test_2048.txt", networkFiles["test_2048.txt"])
+        sleep(5)
         
     # while True:
     #     global networkFilesLock

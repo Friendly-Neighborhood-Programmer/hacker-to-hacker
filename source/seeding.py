@@ -12,15 +12,18 @@ def openUploadSocket(portNumber, ip):
 def send_data(c, fileName, chunkSet):
     try:
         
-        with open(filename, 'rb') as upFile:
+        with open(fileName, 'rb') as upFile:
             index = 0 + chunkSet[0]
             chunkRange = chunkSet[-1] - chunkSet[0]
             upFile.seek(chunkSet[0] * 256)
 
-            while index < chunkSet[0] + chunkRange:
+            print(index, chunkRange, chunkSet[0], chunkSet)
+
+            while index < 8:
                 data = upFile.read(256)
+                print(data)
                 wrapper = FileChunk(index, 256, hashData(data), data)
-                c.send(data.serialize())
+                c.send(wrapper.serialize())
                 index = index + 1
 
             c.shutdown(2)
@@ -43,6 +46,7 @@ def awaitUploadRequest():
         send_data(connection, requestMessage.fileName, requestMessage.chunks)
 
 def hashData(data):
-    h = hasjlib.blake2b()
-    h.update(data)
-    return h.hexdigest()
+    # h = hashlib.blake2b()
+    # h.update(data)
+    # return h.hexdigest()
+    return data
