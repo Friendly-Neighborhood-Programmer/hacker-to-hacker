@@ -1,10 +1,13 @@
 import threading
-from socket import socket
-from structures import FileByteStream
+import socket
+from structures import FileByteStream, User
+
+LOCAL_UPLOAD_PORT = None
+LOCAL_IP = None
 
 def uploadSocket(portNumber):
     print("Send socket has been opened.")
-    s = socket()
+    s = socket.socket()
     s.bind(('localhost', portNumber))
     s.listen(1)
     c, a = s.accept()
@@ -32,13 +35,36 @@ def uploadSocket(portNumber):
 TRACKER_IP = 0
 TRACKER_PORT = 50000
 
+def getLANIP():
+    try:
+        # Create a socket and connect to a remote server (e.g., Google's DNS)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        
+        # Get the LAN IP address
+        LANIP = s.getsockname()[0]
+        
+    except Exception as e:
+        print(f"Error getting LAN IP: {e}")
+        LANIP = '127.0.0.1'  # Fallback to localhost if there's an issue
+    finally:
+        s.close()
+
+    return LANIP
+
 def pingTracker():
-    s = socket()
+    s = socket.socket()
     #s.bind('localhost', 42069)
     s.connect(TRACKER_IP, TRACKER_PORT)
     
+    user = User()
+    user.ip = getLANIP()
+    user.port = LOCAL_UPLOAD_PORT
+    
+    #get all files
+    
 def requestFile(fileName, targetPortNumber, downloadPortNumber):
-    s = socket()
+    s = socket.socket()
     #s.bind(('localhost', downloadPortNumber))
     s.connect(('localhost', targetPortNumber))
     s.send(fileName.encode())
@@ -60,9 +86,9 @@ def requestFile(fileName, targetPortNumber, downloadPortNumber):
 
 try:
   #following is temporary for the time being and should be removed
-  uploadSocketNumber = int(input("Fnter your upload socket number: "))
+  LOCAL_UPLOAD_PORT = int(input("Fnter your upload socket number: "))
 
-  t1 = threading.Thread(target=uploadSocket, args=(uploadSocketNumber,),name='t1')
+  t1 = threading.Thread(target=uploadSocket, args=(LOCAL_UPLOAD_PORT,),name='t1')
   t1.daemon = True
   t1.start()
   #userInput = input("type in requested filename:")

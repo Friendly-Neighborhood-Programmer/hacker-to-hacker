@@ -1,5 +1,5 @@
 class User:
-    def __init__(self, ip, port = 5000):
+    def __init__(self, ip, port = 50001):
         self.ip
         self.port = port
         self.files = []
@@ -9,7 +9,7 @@ class User:
         
 
 class FileByteStream:
-    def __init__(self, name, hash, size, chunk_size):
+    def __init__(self, name, hash, size, chunk_size = 512):
         self.name = name
         self.hash = hash # todo implement hash later
         self.size = size
