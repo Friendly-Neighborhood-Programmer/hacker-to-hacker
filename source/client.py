@@ -1,6 +1,8 @@
 import threading
 import socket
 from structures import FileByteStream, User
+import os
+import pickle as pkl
 
 LOCAL_UPLOAD_PORT = None
 LOCAL_IP = None
@@ -48,30 +50,6 @@ def getLANIP():
 
     return LANIP
 
-import os
-import hashlib
-
-class FileByteStream:
-    def __init__(self, name, file_hash, size, chunk_size=512):
-        self.name = name
-        self.hash = file_hash  # Hash of the file (to be implemented)
-        self.size = size
-        self.chunk_size = chunk_size
-        self.chunks = {}  # Store chunks as a dictionary with the chunk index as the key
-
-    def add_chunk(self, index, data):
-        self.chunks[index] = data
-
-
-def compute_hash(file_path):
-    """Compute the SHA-256 hash of a file."""
-    hasher = hashlib.sha256()
-    with open(file_path, 'rb') as f:
-        while chunk := f.read(4096):  # Read file in chunks of 4096 bytes for hashing
-            hasher.update(chunk)
-    return hasher.hexdigest()
-
-
 def processFilesInFolder(folder_path):
     fileByteStreams = []
 
@@ -95,18 +73,43 @@ def processFilesInFolder(folder_path):
     return fileByteStreams
 
 # TODO set values
-TRACKER_IP = 0
+TRACKER_IP = '192.168.27.204'
 TRACKER_PORT = 50000
 
 def pingTracker():
     s = socket.socket()
     #s.bind('localhost', 42069)
-    #s.connect((TRACKER_IP, TRACKER_PORT))
+    s.connect((TRACKER_IP, TRACKER_PORT))
     
     user = User(getLANIP())
     user.port = LOCAL_UPLOAD_PORT
     #get all files
     user.files = processFilesInFolder('../files')
+    serializedUser = user.serialize()
+
+    chunkSize = 512
+    for i in range(0, len(serializedUser), chunkSize):
+        chunk = serializedUser[i : min(i + chunkSize, len(serializedUser))]
+        s.send(chunk)
+
+    s.send(b'DONE')
+    try:
+        networkFiles = b''
+        while True:
+            data = s.recv(512)
+            if not data:
+                print("Connection Closed.")
+                print("Finished Receiving Network Files.")
+                break
+            networkFiles += data
+
+        networkFiles = pkl.loads(networkFiles)
+        print(networkFiles)
+
+        s.close()
+    except:
+        s.close()
+    
     
 def requestFile(fileName, targetPortNumber, downloadPortNumber):
     s = socket.socket()
@@ -130,6 +133,7 @@ def requestFile(fileName, targetPortNumber, downloadPortNumber):
         s.close()
 
 try:
+  pingTracker()
   #following is temporary for the time being and should be removed
   LOCAL_UPLOAD_PORT = int(input("Fnter your upload socket number: "))
 
@@ -159,5 +163,6 @@ try:
 except KeyboardInterrupt:
     #run override code
     print("override")
+
 
     
