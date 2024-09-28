@@ -4,6 +4,7 @@ import pickle as pkl
 from datetime import datetime
 from datetime import timedelta
 import threading
+from threading import Lock
 import time
 
 #For storage have one dict that has keys of ips, values of users
@@ -14,7 +15,9 @@ import time
 files = {}
 users = {}
 userTimestamps = {}
+timestampsLock = Lock()
 userTimeoutLength = timedelta(seconds=30)
+
 
 def getLANIP():
     try:
@@ -77,9 +80,13 @@ def connectSocket(portNumber):
             else:
                 newList = [(acceptedUser.ip, acceptedUser.port)]
                 files.update({file.name: (file.size, newList)})
-            
+        
+        global timestampsLock
+        timestampsLock.acquire()
+        global userTimestamps    
         #Update user's timestamp
         userTimestamps.update({acceptedUser.ip:datetime.now()})
+        timestampsLock.release()
             
         #Send all files on the network back to the client
         print(files)
@@ -94,15 +101,26 @@ def connectSocket(portNumber):
 def disconnectUsers():
     #Check every 30 seconds for inacitve users
     while True:
+        global timestampsLock
+        timestampsLock.acquire()
+        global userTimestamps
         print(userTimestamps)
         for user in userTimestamps:
             if (userTimestamps[user] + userTimeoutLength) < datetime.now():
                 #Remove the user from the network
                 print("Removed: " + user)
         time.sleep(30)
+        timestampsLock.release()
+
+userTimestamps.update({"12.345":datetime.now()})
 
 if __name__ == "__main__":
     try:
+        # newThread = threading.Thread(target=disconnectUsers, args=())
+        # newThread.daemon = True
+        # newThread.start()
+        # while newThread.is_alive:
+        #     time.sleep(5)
         connectSocket(50000)
     except KeyboardInterrupt:
         print("override")
