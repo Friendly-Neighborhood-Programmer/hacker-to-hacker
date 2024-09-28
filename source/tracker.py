@@ -38,55 +38,58 @@ def connectSocket(portNumber):
     print("File requests socket is open")
     s = socket.socket()
     s.bind((getLANIP(), portNumber))
-    s.listen(1)
-    
-    
-    c, a = s.accept()
-    
-    #Need ip, port, list of filenames and sizes
-    #will be recieving User object
-    userData = b''
     while True:
-        data = c.recv(512)
-        print(data)
-        if data == b"DONE":
-            print("All data recieved")
-            break
-        userData += (data)
+        s.listen(1)
         
-    
-    acceptedUser = structures.User.deserialize(userData)
-    print(acceptedUser.ip)
-    print(acceptedUser.port)
-    for file in acceptedUser.files:
-        print(file.name, file.size)
-    
-    
-    #send through ip and files
-    users.update({acceptedUser.ip:acceptedUser.files})
-    print(users)
-    
-    #Add user to each file
-    for file in acceptedUser.files:
-        if files.keys().__contains__(file.name):
-            newIps = files[file.name]
-            newIps.append((acceptedUser.ip, acceptedUser.port))
-            files.update({file.name: (file.size, newIps)})
-        else:
-            newList = [(acceptedUser.ip, acceptedUser.port)]
-            files.update({file.name: (file.size, newList)})
+        c, a = s.accept()
         
-    #Update user's timestamp
-    userTimestamps.update({acceptedUser.ip:datetime.now()})
+        #Need ip, port, list of filenames and sizes
+        #will be recieving User object
+        userData = b''
+        while True:
+            data = c.recv(512)
+            print(data)
+            if data == b"DONE":
+                print("All data recieved")
+                break
+            userData += (data)
+            
         
-    #Send all files on the network back to the client
-    print(files)
-    networkFiles = pkl.dumps(files)
-    
-    chunkSize = 512
-    for i in range(0, len(networkFiles), chunkSize):
-        chunk = networkFiles[i:min(i+chunkSize, len(networkFiles))]
-        c.send(chunk)
+        acceptedUser = structures.User.deserialize(userData)
+        print(acceptedUser.ip)
+        print(acceptedUser.port)
+        for file in acceptedUser.files:
+            print(file.name, file.size)
+        
+        
+        #send through ip and files
+        users.update({acceptedUser.ip:acceptedUser.files})
+        print(users)
+        
+        #Add user to each file
+        for file in acceptedUser.files:
+            if files.keys().__contains__(file.name):
+                newIps = files[file.name][1]
+                if newIps.__contains__((acceptedUser.ip, acceptedUser.port)):
+                    continue
+                newIps.append((acceptedUser.ip, acceptedUser.port))
+                files.update({file.name: (file.size, newIps)})
+            else:
+                newList = [(acceptedUser.ip, acceptedUser.port)]
+                files.update({file.name: (file.size, newList)})
+            
+        #Update user's timestamp
+        userTimestamps.update({acceptedUser.ip:datetime.now()})
+            
+        #Send all files on the network back to the client
+        print(files)
+        networkFiles = pkl.dumps(files)
+        
+        chunkSize = 512
+        for i in range(0, len(networkFiles), chunkSize):
+            chunk = networkFiles[i:min(i+chunkSize, len(networkFiles))]
+            c.send(chunk)
+        c.close()
 
 def disconnectUsers():
     #Check every 30 seconds for inacitve users
@@ -98,22 +101,8 @@ def disconnectUsers():
                 print("Removed: " + user)
         time.sleep(30)
 
-<<<<<<< Updated upstream
 if __name__ == "__main__":
     try:
         connectSocket(50000)
     except KeyboardInterrupt:
         print("override")
-=======
-            
-def start():
-    try:
-        # newThread = threading.Thread(target=disconnectUsers)
-        # newThread.daemon = True
-        # newThread.start()
-        connectSocket(50000)
-    except KeyboardInterrupt:
-        print("override")
-        
-start()
->>>>>>> Stashed changes
