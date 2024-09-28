@@ -1,6 +1,7 @@
 import socket
 import threading
 import structures
+import pickle as pkl
 
 #For storage have one dict that has keys of ips, values of users
 #one dict that has keys of files and and values of users
@@ -22,7 +23,8 @@ def connectSocket(portNumber):
     
     #Need ip, port, list of filenames and sizes
     #will be recieving User object
-    
+    test = structures.User.deserialize(c.recv(2048))
+    print(test)
     
     acceptedUser = structures.User
     

@@ -1,3 +1,5 @@
+import pickle as pkl
+
 class User:
     def __init__(self, ip, port = 50001):
         self.ip = ip
@@ -6,6 +8,12 @@ class User:
 
     def add_file(self, file):
         pass
+    
+    def serialize(self):
+        return pkl.dumps(self)
+    
+    def deserialize(data):
+        return pkl.loads(data)
         
 
 class FileByteStream:
