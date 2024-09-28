@@ -25,8 +25,15 @@ class FileByteStream:
         self.chunks = {}
 
 
-class Chunk:
-    def __init__(self, index, size, hash):
+class FileChunk:
+    def __init__(self, index, size, hash, data):
         self.index = index
         self.size = size
         self.hash = hash # todo implement hash later
+        self.data = data
+
+    def serialize(self):
+        return pkl.dumps(self)
+
+    def deserialize(chunkData):
+        return pkl.loads(data)
