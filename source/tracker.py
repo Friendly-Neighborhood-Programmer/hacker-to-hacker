@@ -64,10 +64,10 @@ def connectSocket(portNumber):
     for file in acceptedUser.files:
         if files.keys().__contains__(file.name):
             newIps = files[file.name]
-            newIps.append(acceptedUser.ip)
+            newIps.append((acceptedUser.ip, acceptedUser.port))
             files.update({file.name: newIps})
         else:
-            newList = [acceptedUser.ip]
+            newList = [(acceptedUser.ip, acceptedUser.port)]
             files.update({file.name: newList})
         
         
