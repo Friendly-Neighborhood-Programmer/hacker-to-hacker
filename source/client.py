@@ -5,8 +5,9 @@ import os
 import pickle as pkl
 from threading import Lock
 from download import completeFileRequest
+from time import sleep
 
-currentNetworkFiles = {}
+networkFiles = {}
 networkFilesLock = Lock()
 
 LOCAL_UPLOAD_PORT = None
@@ -147,29 +148,38 @@ def testing():
         print("override")
 
 def loopPing():
+    global networkFiles
     while True:
         pingTracker()
+        print('in loop')
+        print(networkFiles)
+        sleep(10)
 
 def main():
+    global networkFiles
     #TODO start daniels thread code
     pingServer = threading.Thread(target=loopPing, args=())
     pingServer.daemon = True
     pingServer.start()
 
     while True:
-        global networkFilesLock
-        networkFilesLock.acquire()
-        print("These are the availible files: ")
-        for key, value in currentNetworkFiles.tems():
-            print(FileByteStream(key).name)
-        networkFilesLock.release()
+        sleep(10)
         
-        fileName = input("Which file would you like to download? or type q to quit: ")
-        if (fileName == 'q'):
-            break
-        newThread = threading.Thread(target=completeFileRequest, args=(fileName))
-        newThread.daemon = True
-        newThread.start()
+    # while True:
+    #     global networkFilesLock
+    #     networkFilesLock.acquire()
+    #     print("These are the availible files: ")
+    #     for key, value in currentNetworkFiles.tems():
+    #         print(FileByteStream(key).name)
+    #     networkFilesLock.release()
+        
+    #     fileName = input("Which file would you like to download? or type q to quit: ")
+    #     if (fileName == 'q'):
+    #         break
+    #     newThread = threading.Thread(target=completeFileRequest, args=(fileName))
+    #     newThread.daemon = True
+    #     newThread.start()
 
 
-    
+if __name__ == '__main__':
+    main()
