@@ -19,7 +19,6 @@ def uploadSocket(portNumber):
             data = fileToSend.read(1024)
         fileToSend.close()
         print("Done Sending.")
-        #print(s.recv(1024))
         c.shutdown(2)
         c.close()
 
