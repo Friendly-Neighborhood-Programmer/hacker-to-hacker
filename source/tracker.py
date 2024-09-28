@@ -103,24 +103,34 @@ def disconnectUsers():
     while True:
         global timestampsLock
         timestampsLock.acquire()
+        print("Disconnect unlocked")
         global userTimestamps
-        print(userTimestamps)
         for user in userTimestamps:
             if (userTimestamps[user] + userTimeoutLength) < datetime.now():
                 #Remove the user from the network
                 print("Removed: " + user)
-        time.sleep(30)
+                for file in users[user].files:
+                    files[file].remove(user)
         timestampsLock.release()
+        time.sleep(15)
 
-userTimestamps.update({"12.345":datetime.now()})
+# userTimestamps.update({"12.345":datetime.now()})
+
+def testLock():
+    while True:
+        global timestampsLock
+        timestampsLock.acquire()
+        global userTimestamps
+        print(userTimestamps)
+        timestampsLock.release()
+        time.sleep(5)
 
 if __name__ == "__main__":
     try:
-        # newThread = threading.Thread(target=disconnectUsers, args=())
-        # newThread.daemon = True
-        # newThread.start()
-        # while newThread.is_alive:
-        #     time.sleep(5)
-        connectSocket(50000)
+        newThread = threading.Thread(target=disconnectUsers, args=())
+        newThread.daemon = True
+        newThread.start()
+        testLock()
+        # connectSocket(50000)
     except KeyboardInterrupt:
         print("override")
