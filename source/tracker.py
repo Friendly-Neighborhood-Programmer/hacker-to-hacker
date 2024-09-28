@@ -1,5 +1,4 @@
 import socket
-import threading
 import structures
 import pickle as pkl
 
@@ -11,11 +10,28 @@ import pickle as pkl
 files = {}
 users = {}
 
+def getLANIP():
+    try:
+        # Create a socket and connect to a remote server (e.g., Google's DNS)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        
+        # Get the LAN IP address
+        LANIP = s.getsockname()[0]
+        
+    except Exception as e:
+        print(f"Error getting LAN IP: {e}")
+        LANIP = '127.0.0.1'  # Fallback to localhost if there's an issue
+    finally:
+        s.close()
+
+    return LANIP
+
 #Handle maintenance signals through threaded socket
 def connectSocket(portNumber):
     print("File requests socket is open")
-    s = socket()
-    s.bind(('localhost', portNumber))
+    s = socket.socket()
+    s.bind((getLANIP(), portNumber))
     s.listen(1)
     
     
@@ -23,13 +39,26 @@ def connectSocket(portNumber):
     
     #Need ip, port, list of filenames and sizes
     #will be recieving User object
-    test = structures.User.deserialize(c.recv(2048))
-    print(test)
+    userData = b''
+    while True:
+        data = c.recv(512)
+        print(data)
+        if data == b"DONE":
+            print("All data recieved")
+            break
+        userData += (data)
+        
     
-    acceptedUser = structures.User
+    acceptedUser = structures.User.deserialize(userData)
+    print(acceptedUser.ip)
+    print(acceptedUser.port)
+    for file in acceptedUser.files:
+        print(file.name, file.size)
+    
     
     #send through ip and files
     users.update({acceptedUser.ip:acceptedUser.files})
+    print(users)
     
     #Add user to each file
     for file in acceptedUser.files:
@@ -41,13 +70,18 @@ def connectSocket(portNumber):
             newList = [acceptedUser.ip]
             files.update({file.name: newList})
         
-    
         
+    #Send all files on the network back to the client
     print(files)
+    networkFiles = pkl.dumps(files)
     
-    
-#Handle file resquests through a socket
+    chunkSize = 512
+    for i in range(0, len(networkFiles), chunkSize):
+        chunk = networkFiles[i:min(i+chunkSize, len(networkFiles))]
+        c.send(chunk)
 
-t1 = threading.Thread(target=connectSocket, args=(50000,),name='t1')
-t1.daemon = True
-t1.start()
+
+try:
+    connectSocket(50000)
+except KeyboardInterrupt:
+    print("override")
