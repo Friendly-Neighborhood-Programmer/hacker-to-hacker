@@ -36,4 +36,4 @@ class FileChunk:
         return pkl.dumps(self)
 
     def deserialize(chunkData):
-        return pkl.loads(data)
+        return pkl.loads(chunkData)
