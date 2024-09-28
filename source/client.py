@@ -31,10 +31,6 @@ def uploadSocket(portNumber):
         c.shutdown(2)
         c.close()
 
-# TODO set values
-TRACKER_IP = 0
-TRACKER_PORT = 50000
-
 def getLANIP():
     try:
         # Create a socket and connect to a remote server (e.g., Google's DNS)
@@ -52,16 +48,65 @@ def getLANIP():
 
     return LANIP
 
+import os
+import hashlib
+
+class FileByteStream:
+    def __init__(self, name, file_hash, size, chunk_size=512):
+        self.name = name
+        self.hash = file_hash  # Hash of the file (to be implemented)
+        self.size = size
+        self.chunk_size = chunk_size
+        self.chunks = {}  # Store chunks as a dictionary with the chunk index as the key
+
+    def add_chunk(self, index, data):
+        self.chunks[index] = data
+
+
+def compute_hash(file_path):
+    """Compute the SHA-256 hash of a file."""
+    hasher = hashlib.sha256()
+    with open(file_path, 'rb') as f:
+        while chunk := f.read(4096):  # Read file in chunks of 4096 bytes for hashing
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def processFilesInFolder(folder_path):
+    fileByteStreams = []
+
+    # Traverse through all files in the folder
+    for root, dir, files in os.walk(folder_path):
+        for fileName in files:
+            filePath = os.path.join(root, fileName)
+            
+            # Get the file size
+            fileSize = os.path.getsize(filePath)
+            
+            # Compute the file hash
+            fileHash = fileName
+            
+            # Create a FileByteStream instance for this file
+            fileByteStream = FileByteStream(fileName, fileHash, fileSize)
+
+            # Append the completed FileByteStream to the list
+            fileByteStreams.append(fileByteStream)
+    
+    return fileByteStreams
+
+# TODO set values
+TRACKER_IP = 0
+TRACKER_PORT = 50000
+
 def pingTracker():
     s = socket.socket()
     #s.bind('localhost', 42069)
-    s.connect(TRACKER_IP, TRACKER_PORT)
+    #s.connect((TRACKER_IP, TRACKER_PORT))
     
-    user = User()
-    user.ip = getLANIP()
+    user = User(getLANIP())
     user.port = LOCAL_UPLOAD_PORT
-    
     #get all files
+    user.files = processFilesInFolder('../files')
     
 def requestFile(fileName, targetPortNumber, downloadPortNumber):
     s = socket.socket()
