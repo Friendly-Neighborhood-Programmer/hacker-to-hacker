@@ -1,21 +1,22 @@
+import socket
+import math
 from structures import FileByteStream, FileChunk, RequestMessage
-import Math
 
-def openDownloadSocket(targetIp, targetPortNumber, fileName, chunkSet):
-    s = socket()
+def openDownloadSocket(targetIp, targetPortNumber):
+    print("Opening download socket")
+    s = socket.socket()
     s.connect((targetIp, targetPortNumber))
-    s.send(RequestMessage(fileName, chunkSet).serialize())
     return s
 
-def requestPeerData(self, socket, fileName):
+def requestPeerData(self, s, fileName):
     try:
         chunkSet = {}
-        chunk = socket.recv(512)
+        chunk = s.recv(512)
 
         while chunk:
             chunk = FileChunk.deserialize(chunk)
             chunkSet[chunk.index] = chunk
-            chunk = socket.recv(512)
+            chunk = s.recv(512)
 
         s.close()
 
@@ -23,24 +24,27 @@ def requestPeerData(self, socket, fileName):
         print(e)
         s.close()
 
-def writeToFile(fileName, completeChunkSet):
-    with open(filename, 'wb') as downFile:
+def writeToFile(fileName, completeChunkSet, fileSize):
+    with open(fileName, 'wb') as downFile:
         byteStream = []
-        for i in range(0, Math.ceil(File.size/File.chunk_size)):
+        for i in range(0, math.ceil(fileSize/256)):
             data.append(chunkSet[i].data)
 
         fileToDownload.write(data)
 
-def completeFileRequest(fileName):
+def completeFileRequest(fileName, fileInfo):
+    fileSize, fileOwners = fileInfo[0], fileInfo[1]
     # chunk algorithm here
     # get the targetIp, targetPortNumber and chunkSet from algorithm
-    s = openDownloadSocket(targetIp, targetPortNumber, fileName, chunkSet)
+    chunkSet = [0, 100]
+    fileName = "../files/tosend.png"
+    targetIp = "localhost"
+    targetPortNumber = 50001
+    s = openDownloadSocket(targetIp, targetPortNumber)
+    req = RequestMessage(fileName, chunkSet)
+    s.send(req.serialize())
+
     # put this in while loop
     # chunkSet = requestPeerData(s, fileName)
     s.close()
-    writeToFile(fileName, chunkSet)
-
-class RequestMessage:
-    def __init__(self, file, chunks):
-        self.file = file
-        self.chunks = chunks
+    writeToFile("../files/received.png", chunkSet, fileSize)

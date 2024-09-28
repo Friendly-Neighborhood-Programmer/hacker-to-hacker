@@ -93,7 +93,8 @@ def disconnectUsers():
             #Remove the user from the network
             print(user)
 
-try:
-    connectSocket(50000)
-except KeyboardInterrupt:
-    print("override")
+if __name__ == "__main__":
+    try:
+        connectSocket(50000)
+    except KeyboardInterrupt:
+        print("override")

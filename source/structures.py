@@ -40,7 +40,7 @@ class FileChunk:
 
 
 class RequestMessage:
-    __init__(self, name, chunksList):
+    def __init__(self, name, chunksList):
         self.fileName = name
         self.chunks = chunksList
         

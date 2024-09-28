@@ -4,12 +4,12 @@ from structures import FileChunk, RequestMessage
 from tracker import getLANIP
 
 def openUploadSocket(portNumber, ip):
-    s = socket()
+    s = socket.socket()
     s.bind((ip, portNumber))
     s.listen(4)
     return s
 
-def send_data(connection, fileName, chunkSet):
+def send_data(c, fileName, chunkSet):
     try:
         
         with open(filename, 'rb') as upFile:
@@ -32,9 +32,12 @@ def send_data(connection, fileName, chunkSet):
         c.close()
 
 def awaitUploadRequest():
-    socket = openUploadSocket(50001, getLANIP())
+    # debug
+    s = openUploadSocket(50001, "localhost")
+    # s = openUploadSocket(50001, getLANIP())
     while True:
-        connection, address = socket.accept()
+        print("Awaiting upload request")
+        connection, address = s.accept()
         messageBytes = connection.recv(512)
         requestMessage = RequestMessage.deserialize(messageBytes)
         send_data(connection, requestMessage.fileName, requestMessage.chunks)
