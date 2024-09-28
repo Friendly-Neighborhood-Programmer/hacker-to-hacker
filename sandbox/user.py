@@ -4,7 +4,7 @@ from socket import socket
 def uploadSocket(portNumber):
     print("Send socket has been opened.")
     s = socket()
-    s.bind(('localhost', portNumber))
+    s.bind(('192.168.27.76', portNumber))
     s.listen(1)
     c, a = s.accept()
     fileName = c.recv(1024)
@@ -24,10 +24,10 @@ def uploadSocket(portNumber):
         c.close()
 
     except Exception as e:
+        print(e)
         c.shutdown(2)
         c.close()
     
-
 def requestFile(fileName, targetPortNumber, downloadPortNumber):
     s = socket()
     s.bind(('localhost', downloadPortNumber))
@@ -49,32 +49,34 @@ def requestFile(fileName, targetPortNumber, downloadPortNumber):
     except:
         s.close()
 
+try:
+    #following is temporary for the time being and should be removed
+    uploadSocketNumber = int(input("Fnter your upload socket number: "))
 
 
-#following is temporary for the time being and should be removed
-uploadSocketNumber = int(input("Fnter your upload socket number: "))
-
-
-t1 = threading.Thread(target=uploadSocket, args=(uploadSocketNumber,),name='t1')
-t1.start()
-#userInput = input("type in requested filename:")
-userInput = '../files/tosend.png'
-if (userInput == ""):
-    ...
-if (userInput == " "):
-    ...
-if (userInput == "q"):
-    ...
-    
+    t1 = threading.Thread(target=uploadSocket, args=(uploadSocketNumber,),name='t1')
+    t1.daemon = True
+    t1.start()
+    #userInput = input("type in requested filename:")
+    userInput = '../files/tosend.png'
+    if (userInput == ""):
+        ...
+    if (userInput == " "):
+        ...
+    if (userInput == "q"):
+        ...
         
-#TODO request to tracker for socket
+            
+    #TODO request to tracker for socket
+            
+    #temporary solution to no tracker
+    targetSocketNumber = int(input("type in requested socket:"))
+    #temp end
         
-#temporary solution to no tracker
-targetSocketNumber = int(input("type in requested socket:"))
-#temp end
-    
-downloadSocketNumber = int(input('Enter your download socket:'))
-requestFile(userInput, targetSocketNumber, downloadSocketNumber)
-#t2 = threading.Thread(target=requestFile, args=(userInput,sock))
+    downloadSocketNumber = int(input('Enter your download socket:'))
+    requestFile(userInput, targetSocketNumber, downloadSocketNumber)
+    #t2 = threading.Thread(target=requestFile, args=(userInput,sock))
 
-    
+except KeyboardInterrupt:
+    #run override code
+    print("override")
