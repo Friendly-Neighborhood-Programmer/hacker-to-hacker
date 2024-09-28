@@ -50,7 +50,6 @@ def requestFile(fileName, targetPortNumber, downloadPortNumber):
         s.close()
 
 
-
 #following is temporary for the time being and should be removed
 uploadSocketNumber = int(input("Fnter your upload socket number: "))
 

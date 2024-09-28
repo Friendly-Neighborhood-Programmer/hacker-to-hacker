@@ -6,7 +6,7 @@ class User:
 
     def add_file(self, file):
         pass
-
+        
 
 class File:
     def __init__(self, name, hash, size, chunk_size):
