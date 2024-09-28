@@ -2,6 +2,9 @@ import socket
 import structures
 import pickle as pkl
 from datetime import datetime
+from datetime import timedelta
+import threading
+import time
 
 #For storage have one dict that has keys of ips, values of users
 #one dict that has keys of files and and values of users
@@ -11,8 +14,7 @@ from datetime import datetime
 files = {}
 users = {}
 userTimestamps = {}
-timeoutLength = 30
-datetime.second
+userTimeoutLength = timedelta(seconds=30)
 
 def getLANIP():
     try:
@@ -75,7 +77,7 @@ def connectSocket(portNumber):
             files.update({file.name: (file.size, newList)})
         
     #Update user's timestamp
-    
+    userTimestamps.update({acceptedUser.ip:datetime.now()})
         
     #Send all files on the network back to the client
     print(files)
@@ -87,14 +89,31 @@ def connectSocket(portNumber):
         c.send(chunk)
 
 def disconnectUsers():
-    #Check every so often for inacitve users
-    for user in userTimestamps:
-        if (datetime.now() - userTimestamps[user]).total_seconds() < 30:
-            #Remove the user from the network
-            print(user)
+    #Check every 30 seconds for inacitve users
+    while True:
+        print(userTimestamps)
+        for user in userTimestamps:
+            if (userTimestamps[user] + userTimeoutLength) < datetime.now():
+                #Remove the user from the network
+                print("Removed: " + user)
+        time.sleep(30)
 
+<<<<<<< Updated upstream
 if __name__ == "__main__":
     try:
         connectSocket(50000)
     except KeyboardInterrupt:
         print("override")
+=======
+            
+def start():
+    try:
+        # newThread = threading.Thread(target=disconnectUsers)
+        # newThread.daemon = True
+        # newThread.start()
+        connectSocket(50000)
+    except KeyboardInterrupt:
+        print("override")
+        
+start()
+>>>>>>> Stashed changes
