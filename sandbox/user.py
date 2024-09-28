@@ -1,63 +1,80 @@
 import threading
-import socket
-def startSocket(yourSocket):
-    print("hi")
-    s = socket.socket()
-    s.bind(("localhost", yourSocket))
-    s.listen(1)
-    c,a = s.accept()
-    filetodown = open("receive.png", "wb")
-    while True:
-        print("Receiving....")
-        data = c.recv(1024)
-        if data == b"DONE":
-           print("Done Receiving.")
-           break
-        filetodown.write(data)
-    filetodown.close()
-    filetodown.close()
-    c.shutdown(2)
-    c.close()
-    s.close()
+from socket import socket
 
-def requestFile(filename, sock):
-    s = socket.socket()
-    s.connect(("localhost", sock))
-    filetosend = open(filename, "rb")
-    data = filetosend.read(1024)
-    while data:
-        print("Sending...")
-        s.send(data)
-        data = filetosend.read(1024)
-    filetosend.close()
-    s.send(b"DONE")
-    print("Done Sending.")
-    print(s.recv(1024))
-    s.shutdown(2)
-    s.close()
+def uploadSocket(portNumber):
+    print("Send socket has been opened.")
+    s = socket()
+    s.bind(('localhost', portNumber))
+    s.listen(1)
+    c, a = s.accept()
+    fileName = c.recv(1024)
+    fileName = fileName.decode()
+    print(fileName)
+
+    try:
+        fileToSend = open(fileName, "rb")
+        data = fileToSend.read(1024)
+        while data:
+            c.send(data)
+            data = fileToSend.read(1024)
+        fileToSend.close()
+        print("Done Sending.")
+        #print(s.recv(1024))
+        c.shutdown(2)
+        c.close()
+
+    except Exception as e:
+        c.shutdown(2)
+        c.close()
+    
+
+def requestFile(fileName, targetPortNumber, downloadPortNumber):
+    s = socket()
+    s.bind(('localhost', downloadPortNumber))
+    s.connect(('localhost', targetPortNumber))
+    s.send(fileName.encode())
+
+    try:
+        fileToDownload = open("../files/receive.png", "wb")
+        while True:
+            data = s.recv(1024)
+            if not data:
+                print("Connection Closed.")
+                print("Finished Receiving.")
+                break
+            fileToDownload.write(data)
+
+        fileToDownload.close()
+        s.close()
+    except:
+        s.close()
+
+
 
 #following is temporary for the time being and should be removed
-yourSocket = int(input("your socket number: "))
+uploadSocketNumber = int(input("Fnter your upload socket number: "))
 
-t1 = threading.Thread(target=startSocket, args=(yourSocket,),name='t1')
+
+t1 = threading.Thread(target=uploadSocket, args=(uploadSocketNumber,),name='t1')
 t1.start()
-while True:
-    userInput = input("type in requested filename:")
-    if (userInput == ""):
-        continue
-    if (userInput == " "):
-        continue
-    if (userInput == "q"):
-        break
+#userInput = input("type in requested filename:")
+userInput = '../files/tosend.png'
+if (userInput == ""):
+    ...
+if (userInput == " "):
+    ...
+if (userInput == "q"):
+    ...
     
-    #TODO request to tracker for socket
+        
+#TODO request to tracker for socket
+        
+#temporary solution to no tracker
+targetSocketNumber = int(input("type in requested socket:"))
+#temp end
     
-    #temporary solution to no tracker
-    targetSocket = int(input("type in requested socket:"))
-    #temp end
-    
-    sock = 5000
-    requestFile(userInput,targetSocket)
-    #t2 = threading.Thread(target=requestFile, args=(userInput,sock))
+downloadSocketNumber = int(input('Enter your download socket:'))
+requestFile(userInput, targetSocketNumber, downloadSocketNumber)
+#t2 = threading.Thread(target=requestFile, args=(userInput,sock))
 
     
