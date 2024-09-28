@@ -1,10 +1,10 @@
-from structures import FileByteStream, FileChunk
+from structures import FileByteStream, FileChunk, RequestMessage
 import Math
 
-def openDownloadSocket(targetIp, targetPortNumber, chuckSet):
+def openDownloadSocket(targetIp, targetPortNumber, fileName, chunkSet):
     s = socket()
     s.connect((targetIp, targetPortNumber))
-    s.send(chunckSet)
+    s.send(RequestMessage(fileName, chunkSet).serialize())
     return s
 
 def requestPeerData(self, socket, fileName):
@@ -31,10 +31,13 @@ def writeToFile(fileName, completeChunkSet):
 
         fileToDownload.write(data)
 
-def completeFileRequest(fileName, targetIp, targetPortNumber):
-    s = openDownloadSocket(targetIp, targetPortNumber, fileName)
+def completeFileRequest(fileName):
+    # chunk algorithm here
+    # get the targetIp, targetPortNumber and chunkSet from algorithm
+    s = openDownloadSocket(targetIp, targetPortNumber, fileName, chunkSet)
     # put this in while loop
     # chunkSet = requestPeerData(s, fileName)
+    s.close()
     writeToFile(fileName, chunkSet)
 
 class RequestMessage:

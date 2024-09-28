@@ -37,3 +37,15 @@ class FileChunk:
 
     def deserialize(chunkData):
         return pkl.loads(chunkData)
+
+
+class RequestMessage:
+    __init__(self, name, chunksList):
+        self.fileName = name
+        self.chunks = chunksList
+        
+    def serialize(self):
+        return pkl.dumps(self)
+
+    def deserialize(chunkData):
+        return pkl.loads(chunkData)

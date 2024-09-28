@@ -1,41 +1,45 @@
 import socket
-from structures import FileChunk
-def openUploadSocket(self, file, portNumber,ip):
-    print("Send socket has been opened.")
-    sock = socket()
-    sock.bind((ip, portNumber))
+import hashlib
+from structures import FileChunk, RequestMessage
+from tracker import getLANIP
+
+def openUploadSocket(portNumber, ip):
+    s = socket()
+    s.bind((ip, portNumber))
+    s.listen(4)
+    return s
+
+def send_data(connection, fileName, chunkSet):
     try:
-        while True:
-            sock.listen(1)
-            c = sock.accept()
-            fileName = c.recv(512)
-            fileName = fileName.decode()
-            print("request for: "+fileName)
+        
+        with open(filename, 'rb') as upFile:
+            index = 0 + chunkSet[0]
+            chunkRange = chunkSet[-1] - chunkSet[0]
+            upFile.seek(chunkSet[0] * 256)
 
-            
-            fileToSend = open(fileName, "rb")
-            data = fileToSend.read(256)
-            index = 0
-            while data:
-                wrapper = FileChunk()
-                wrapper.data = data
-                wrapper.index =index
-                wrapper.size = 256
-                #wrapper.hash = 
+            while index < chunkSet[0] + chunkRange:
+                data = upFile.read(256)
+                wrapper = FileChunk(index, 256, hashData(data), data)
+                c.send(data.serialize())
+                index = index + 1
 
-                index = index+1
-                c.send(data)
-                data = fileToSend.read(256)
-                fileToSend.close()
-                print("Done Sending.")
-                #print(s.recv(1024))
-                c.shutdown(2)
-                c.close()
+            c.shutdown(2)
+            c.close()
 
     except Exception as e:
         print(e)
         c.shutdown(2)
         c.close()
 
-def send_data(self, file):
-    pass
+def awaitUploadRequest():
+    socket = openUploadSocket(50001, getLANIP())
+    while True:
+        connection, address = socket.accept()
+        messageBytes = connection.recv(512)
+        requestMessage = RequestMessage.deserialize(messageBytes)
+        send_data(connection, requestMessage.fileName, requestMessage.chunks)
+
+def hashData(data):
+    h = hasjlib.blake2b()
+    h.update(data)
+    return h.hexdigest()
