@@ -1,11 +1,12 @@
 from structures import FileByteStream
-def openDownloadSocket():
+#def openDownloadSocket():
+#    pass
+
+#The following is the function that will be called when a request thread is made
+def request_data(self, fileName):
     pass
 
-def request_data(self, file):
-    pass
-
-def writeToFile(fileName,fileData):
+def writeToFile(self,fileName,fileData):
     fileToDownload = open("/files/"+fileName, "wb")
     File = FileByteStream(fileData)
     for i in range(0,(File.size/File.chunk_size)):
