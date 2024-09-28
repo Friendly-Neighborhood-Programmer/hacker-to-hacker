@@ -1,11 +1,15 @@
 import socket
- 
-# Create a connection to the server application on port 81
-tcp_socket = socket.create_connection(('localhost', 81))
- 
-try:
-    data = str.encode("Hi. I am a TCP client sending data to the server")
-    tcp_socket.sendall(data)
-finally:
-    print("Closing socket")
-    tcp_socket.close()
+s = socket.socket()
+s.connect(("localhost", 5000))
+filetosend = open("tosend.png", "rb")
+data = filetosend.read(1024)
+while data:
+    print("Sending...")
+    s.send(data)
+    data = filetosend.read(1024)
+filetosend.close()
+s.send(b"DONE")
+print("Done Sending.")
+print(s.recv(1024))
+s.shutdown(2)
+s.close()
