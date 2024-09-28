@@ -3,35 +3,14 @@ import socket
 from structures import FileByteStream, User
 import os
 import pickle as pkl
+from threading import Lock
+from download import completeFileRequest
+
+currentNetworkFiles = {}
+networkFilesLock = Lock()
 
 LOCAL_UPLOAD_PORT = None
 LOCAL_IP = None
-
-def uploadSocket(portNumber):
-    print("Send socket has been opened.")
-    s = socket.socket()
-    s.bind(('localhost', portNumber))
-    s.listen(1)
-    c, a = s.accept()
-    fileName = c.recv(1024)
-    fileName = fileName.decode()
-    print(fileName)
-
-    try:
-        fileToSend = open(fileName, "rb")
-        data = fileToSend.read(1024)
-        while data:
-            c.send(data)
-            data = fileToSend.read(1024)
-        fileToSend.close()
-        print("Done Sending.")
-        #print(s.recv(1024))
-        c.shutdown(2)
-        c.close()
-
-    except Exception as e:
-        c.shutdown(2)
-        c.close()
 
 def getLANIP():
     try:
@@ -94,22 +73,24 @@ def pingTracker():
 
     s.send(b'DONE')
     try:
-        networkFiles = b''
+        currentNetworkFiles = b''
         while True:
             data = s.recv(512)
             if not data:
                 print("Connection Closed.")
                 print("Finished Receiving Network Files.")
                 break
-            networkFiles += data
-
-        networkFiles = pkl.loads(networkFiles)
-        print(networkFiles)
+            currentNetworkFiles += data
+        
+        global networkFilesLock
+        networkFilesLock.acquire()
+        global networkFiles
+        networkFiles = pkl.loads(currentNetworkFiles)
+        networkFilesLock.release()
 
         s.close()
     except:
         s.close()
-    
     
 def requestFile(fileName, targetPortNumber, downloadPortNumber):
     s = socket.socket()
@@ -132,37 +113,63 @@ def requestFile(fileName, targetPortNumber, downloadPortNumber):
     except:
         s.close()
 
-try:
-  pingTracker()
-  #following is temporary for the time being and should be removed
-  LOCAL_UPLOAD_PORT = int(input("Fnter your upload socket number: "))
+def testing():
+    try:
+        pingTracker()
+        #following is temporary for the time being and should be removed
+        LOCAL_UPLOAD_PORT = int(input("Fnter your upload socket number: "))
 
-  t1 = threading.Thread(target=uploadSocket, args=(LOCAL_UPLOAD_PORT,),name='t1')
-  t1.daemon = True
-  t1.start()
-  #userInput = input("type in requested filename:")
-  userInput = '../files/tosend.png'
-  if (userInput == ""):
-      ...
-  if (userInput == " "):
-      ...
-  if (userInput == "q"):
-      ...
-      
-          
-  #TODO request to tracker for socket
-          
-  #temporary solution to no tracker
-  targetSocketNumber = int(input("type in requested socket:"))
-  #temp end
-      
-  downloadSocketNumber = int(input('Enter your download socket:'))
-  requestFile(userInput, targetSocketNumber, downloadSocketNumber)
-  #t2 = threading.Thread(target=requestFile, args=(userInput,sock))
+        # t1 = threading.Thread(target=uploadSocket, args=(LOCAL_UPLOAD_PORT,),name='t1')
+        # t1.daemon = True
+        # t1.start()
+        # #userInput = input("type in requested filename:")
+        # userInput = '../files/tosend.png'
+        # if (userInput == ""):
+        #     ...
+        # if (userInput == " "):
+        #     ...
+        # if (userInput == "q"):
+        #     ...
+            
+                
+        # #TODO request to tracker for socket
+                
+        # #temporary solution to no tracker
+        # targetSocketNumber = int(input("type in requested socket:"))
+        # #temp end
+            
+        # downloadSocketNumber = int(input('Enter your download socket:'))
+        # requestFile(userInput, targetSocketNumber, downloadSocketNumber)
+        # #t2 = threading.Thread(target=requestFile, args=(userInput,sock))
 
-except KeyboardInterrupt:
-    #run override code
-    print("override")
+    except KeyboardInterrupt:
+        #run override code
+        print("override")
+
+def loopPing():
+    while True:
+        pingTracker()
+
+def main():
+    #TODO start daniels thread code
+    pingServer = threading.Thread(target=loopPing, args=())
+    pingServer.daemon = True
+    pingServer.start()
+
+    while True:
+        global networkFilesLock
+        networkFilesLock.acquire()
+        print("These are the availible files: ")
+        for key, value in currentNetworkFiles.tems():
+            print(FileByteStream(key).name)
+        networkFilesLock.release()
+        
+        fileName = input("Which file would you like to download? or type q to quit: ")
+        if (fileName == 'q'):
+            break
+        newThread = threading.Thread(target=completeFileRequest, args=(fileName))
+        newThread.daemon = True
+        newThread.start()
 
 
     

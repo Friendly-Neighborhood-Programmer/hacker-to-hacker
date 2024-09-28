@@ -1,6 +1,7 @@
 import socket
 import structures
 import pickle as pkl
+from datetime import datetime
 
 #For storage have one dict that has keys of ips, values of users
 #one dict that has keys of files and and values of users
@@ -9,6 +10,9 @@ import pickle as pkl
 
 files = {}
 users = {}
+userTimestamps = {}
+timeoutLength = 30
+datetime.second
 
 def getLANIP():
     try:
@@ -64,12 +68,14 @@ def connectSocket(portNumber):
     for file in acceptedUser.files:
         if files.keys().__contains__(file.name):
             newIps = files[file.name]
-            newIps.append(acceptedUser.ip)
-            files.update({file.name: newIps})
+            newIps.append((acceptedUser.ip, acceptedUser.port))
+            files.update({file.name: (file.size, newIps)})
         else:
-            newList = [acceptedUser.ip]
-            files.update({file.name: newList})
+            newList = [(acceptedUser.ip, acceptedUser.port)]
+            files.update({file.name: (file.size, newList)})
         
+    #Update user's timestamp
+    
         
     #Send all files on the network back to the client
     print(files)
@@ -80,6 +86,12 @@ def connectSocket(portNumber):
         chunk = networkFiles[i:min(i+chunkSize, len(networkFiles))]
         c.send(chunk)
 
+def disconnectUsers():
+    #Check every so often for inacitve users
+    for user in userTimestamps:
+        if (datetime.now() - userTimestamps[user]).total_seconds() < 30:
+            #Remove the user from the network
+            print(user)
 
 try:
     connectSocket(50000)
