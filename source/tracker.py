@@ -1,6 +1,6 @@
-from socket import socket
-import threading
+import socket
 import structures
+import pickle as pkl
 
 #For storage have one dict that has keys of ips, values of users
 #one dict that has keys of files and and values of users
@@ -10,43 +10,78 @@ import structures
 files = {}
 users = {}
 
-#Handle file resquests through a socket
-def requestSocket(portNumber):
-    print("File requests socket is open")
-    s = socket()
-    s.bind(('localhost', portNumber))
-    s.listen(1)
-    c, a = s.accept()
-    
-    ip = c.recv(256)
-    #Accept ip, then list of files
-    usrFiles = c.recv(2048)
-    
-    # file1 = structures.File("file1", 0, 2048, 512)
-    
-    # file2 = structures.File("file2", 0, 2048, 512)
-    
-    # file3 = structures.File("file3", 0, 2048, 512)
-    
-    # ip = "12.34.567"
-    
-    # usrFiles = [file1, file2, file3]
-    
-    #send through ip and files
-    users.update({ip:usrFiles})
-    
-    #Add user to each file
-    for file in usrFiles:
-        if files.keys().__contains__(file.name):
-            newIps = files[file.name]
-            newIps.append(ip)
-            files.update({file.name: newIps})
-        else:
-            newList = [ip]
-            files.update({file.name: newList})
+def getLANIP():
+    try:
+        # Create a socket and connect to a remote server (e.g., Google's DNS)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
         
-    print(files)
-    
-    
+        # Get the LAN IP address
+        LANIP = s.getsockname()[0]
+        
+    except Exception as e:
+        print(f"Error getting LAN IP: {e}")
+        LANIP = '127.0.0.1'  # Fallback to localhost if there's an issue
+    finally:
+        s.close()
+
+    return LANIP
 
 #Handle maintenance signals through threaded socket
+def connectSocket(portNumber):
+    print("File requests socket is open")
+    s = socket.socket()
+    s.bind((getLANIP(), portNumber))
+    s.listen(1)
+    
+    
+    c, a = s.accept()
+    
+    #Need ip, port, list of filenames and sizes
+    #will be recieving User object
+    userData = b''
+    while True:
+        data = c.recv(512)
+        print(data)
+        if data == b"DONE":
+            print("All data recieved")
+            break
+        userData += (data)
+        
+    
+    acceptedUser = structures.User.deserialize(userData)
+    print(acceptedUser.ip)
+    print(acceptedUser.port)
+    for file in acceptedUser.files:
+        print(file.name, file.size)
+    
+    
+    #send through ip and files
+    users.update({acceptedUser.ip:acceptedUser.files})
+    print(users)
+    
+    #Add user to each file
+    for file in acceptedUser.files:
+        if files.keys().__contains__(file.name):
+            newIps = files[file.name]
+            newIps.append(acceptedUser.ip)
+            files.update({file.name: newIps})
+        else:
+            newList = [acceptedUser.ip]
+            files.update({file.name: newList})
+        
+        
+    #Send all files on the network back to the client
+    print(files)
+    networkFiles = pkl.dumps(files)
+    
+    chunkSize = 512
+    for i in range(0, len(networkFiles), chunkSize):
+        chunk = networkFiles[i:min(i+chunkSize, len(networkFiles))]
+        c.send(chunk)
+
+
+try:
+    connectSocket(50000)
+except KeyboardInterrupt:
+    print("override")

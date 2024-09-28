@@ -1,17 +1,23 @@
 import pickle as pkl
 
 class User:
-    def __init__(self, ip, port = 5000):
-        self.ip
+    def __init__(self, ip, port = 50001):
+        self.ip = ip
         self.port = port
         self.files = []
 
     def add_file(self, file):
         pass
+    
+    def serialize(self):
+        return pkl.dumps(self)
+    
+    def deserialize(data):
+        return pkl.loads(data)
         
 
 class FileByteStream:
-    def __init__(self, name, hash, size, chunk_size):
+    def __init__(self, name, hash, size, chunk_size = 512):
         self.name = name
         self.hash = hash # todo implement hash later
         self.size = size
@@ -30,4 +36,4 @@ class FileChunk:
         return pkl.dumps(self)
 
     def deserialize(chunkData):
-        return pkl.loads(data)
+        return pkl.loads(chunkData)
