@@ -128,7 +128,7 @@ def disconnectUsers():
         print(users)
         print(userTimestamps)
         timestampsLock.release()
-        time.sleep(15)
+        time.sleep(10)
 
 if __name__ == "__main__":
     try:

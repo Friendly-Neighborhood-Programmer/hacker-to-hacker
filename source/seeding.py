@@ -11,7 +11,7 @@ def openUploadSocket(portNumber, ip):
 
 def send_data(c, fileName, chunkSet):
     try:
-        
+        print(chunkSet)
         with open(f'../files/{fileName}', 'rb') as upFile:
             index = 0 + chunkSet[0]
             chunkRange = chunkSet[-1] - chunkSet[0]
