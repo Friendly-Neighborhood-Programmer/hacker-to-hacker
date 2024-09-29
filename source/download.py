@@ -3,6 +3,7 @@ import math
 from structures import FileByteStream, FileChunk, RequestMessage
 from threading import Lock
 import threading
+import datetime
 
 threadFailed = []
 threadFailedLock = Lock()
@@ -15,7 +16,7 @@ def openDownloadSocket(targetIp, targetPortNumber):
     return s
 
 def requestPeerData(s,chunkRange):
-    print("ChunkRangeinPeerData:",chunkRange)
+    # print("ChunkRangeinPeerData:",chunkRange)
     try:
         chunkSet = {}
         #chunk = s.recv(2048)
@@ -27,7 +28,7 @@ def requestPeerData(s,chunkRange):
             # if index > chunkRange[1]:
             #    continue
             chunkSet[index] = chunk
-            print("index:",index)
+            # print("index:",index)
             #chunk = s.recv(2048)
             chunk = s.recv(512)
             index = index+1
@@ -51,7 +52,7 @@ def writeToFile(fileName, chunkData, fileSize):
         downFile.write(byteStream)
 
 def combinedSocket(targetIp,targetPortNumber,fileName,chunkRange,threadID):
-    print("ChunkRangeinCominedSocket:",chunkRange)
+    # print("ChunkRangeinCominedSocket:",chunkRange)
     s = openDownloadSocket(targetIp, targetPortNumber)
     req = RequestMessage(fileName, chunkRange)
     s.send(req.serialize())
@@ -69,34 +70,39 @@ def combinedSocket(targetIp,targetPortNumber,fileName,chunkRange,threadID):
     global chunkData
     chunkData.update(newData)
     with open(f"./logs{threadID}.data", "w") as logs:
-        logs.write(str(newData))
+        for i in newData:
+            logs.write(f"Chunk ID: {i}\nRaw Data: {newData[i]}\n\n")
         
     chunkDataLock.release()
 
     s.close()
 
 def completeFileRequest(fileName, fileInfo):
-        #File size and owner
+    #File size and owner
     fileSize = fileInfo[0]
     fileOwners = fileInfo[1]
 
     #Calculate chunk count and chunks per person
     chunkCount = math.ceil(fileSize / 512)
     chunksPerPerson = math.ceil(chunkCount / len(fileOwners))
-    print("chunkscount",chunkCount)
-    print("chunks per person",chunksPerPerson)
-    print("file own",len(fileOwners))
+    # print("chunkscount",chunkCount)
+    # print("chunks per person",chunksPerPerson)
+    # print("file own",len(fileOwners))
 
     #Fill the thread failed array
     global threadFailedLock
     threadFailedLock.acquire()
     global threadFailed
+    threadFailed = []
     for i in range(len(fileOwners)):
         threadFailed.append(False)
     threadFailedLock.release()
     
     threadList = []
     currentChunk = 0
+
+    # start time of download
+    downloadStart = datetime.time()
 
     continueLooping = True
     while continueLooping:
@@ -114,14 +120,14 @@ def completeFileRequest(fileName, fileInfo):
             fileIP = fileOwners[i][0]
             filePort = fileOwners[i][1]
             chunkRange = (currentChunk,upperBoundChunk)
-            print("i:",i)
-            print("chunkRange:",chunkRange)
+            # print("i:",i)
+            # print("chunkRange:",chunkRange)
             if (threadFailed[i] == False) and True not in threadFailed:
                 curThread =threading.Thread(target=combinedSocket, args=(fileIP,filePort,fileName,chunkRange,i))
                 threadList.append(curThread)
                 curThread.start()
             else:
-                print("((((((((((((((((((((((((((((((((((((((()))))))))))))))))))))))))))))))))))))))")
+                print("retrying failed chunk downloads")
                 #Shift all failed threads chunks to the next person in order
                 index = i + 1
                 if index >= len(fileOwners):
@@ -133,8 +139,8 @@ def completeFileRequest(fileName, fileInfo):
 
             #Increase the current chunk
             currentChunk = currentChunk + chunksPerPerson
-            print("Chunks per person")
-            print(chunksPerPerson)
+            # print("Chunks per person")
+            # print(chunksPerPerson)
         threadFailedLock.release()
 
         #Wait for all threads to finish
@@ -157,3 +163,8 @@ def completeFileRequest(fileName, fileInfo):
 
     # put this in while loop
     writeToFile("../files/received.png", chunkData, fileSize)
+    
+    downloadEnd = datetime.time()
+    time = downloadEnd.second - downloadStart.second
+    speed = fileSize / time if time != 0 else fileSize
+    print(f"{fileName} was downloaded with a speed of {speed} bytes per second\n\n")
