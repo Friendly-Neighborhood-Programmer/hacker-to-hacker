@@ -12,7 +12,7 @@ def openUploadSocket(portNumber, ip):
 def send_data(c, fileName, chunkSet):
     try:
         
-        with open(fileName, 'rb') as upFile:
+        with open(f'../files/{fileName}', 'rb') as upFile:
             index = 0 + chunkSet[0]
             chunkRange = chunkSet[-1] - chunkSet[0]
             #upFile.seek(chunkSet[0] * 256)
@@ -20,7 +20,7 @@ def send_data(c, fileName, chunkSet):
 
             print(index, chunkRange, chunkSet[0], chunkSet)
 
-            while index < 8:
+            while index < chunkRange + chunkSet[0]:
                 data = upFile.read(512)
                 #data = upFile.read(256)
                 print(len(data))
