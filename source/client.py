@@ -54,7 +54,7 @@ def processFilesInFolder(folder_path):
     return fileByteStreams
 
 # TODO set values
-TRACKER_IP = '192.168.27.204'
+TRACKER_IP = '192.168.27.76'
 TRACKER_PORT = 50000
 
 def pingTracker():
@@ -173,27 +173,31 @@ def main():
                 networkFilesLock.acquire()
                 prettyPrint(networkFiles)
                 networkFilesLock.release()
-                break
+                continue
 
             case "2":
                 fileName = input("Name of the file you would like to download: ")
                 networkFilesLock.acquire()
                 if not fileName in networkFiles:
                     print("File not found on the Hacker Network, enter the name of a valid file\n")
-                    break
+                    continue
 
                 newThread = threading.Thread(target=completeFileRequest, args=(fileName, networkFiles[fileName]))
                 newThread.daemon = True
                 newThread.start()
-                # newThread.join() # maybe this will allow multiple at once?
-                break
+                newThread.join() # maybe this will allow multiple at once?
+                networkFilesLock.release()
+                continue
 
             case "q":
                 print("Leaving the Hacker Network...")
-                exit()
+                break
 
             case _:
                 print("Please enter a valid option\n")
+                continue
+
+    exit()
 
 def promptUser():
     return input("Welcome to Hacker-to-Hacker\n" \
@@ -206,10 +210,11 @@ def prettyPrint(networkFiles):
     print("Files available for download:")
     for key, value in networkFiles.items():
         print(f"File: {key}")
-        print(f"Size: {value[0]} bytes\n")
+        print(f"Size: {value[0]} bytes")
         print(f"Sources ({len(value[1])}):")
         for owner in value[1]:
-            print(f"{owner[0]}:{owner[1]}\n\n")
+            print(f"{owner[0]}:{owner[1]}")
+        print("\n")
 
 if __name__ == '__main__':
     main()

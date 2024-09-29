@@ -92,6 +92,7 @@ def completeFileRequest(fileName, fileInfo):
     global threadFailedLock
     threadFailedLock.acquire()
     global threadFailed
+    threadFailed = []
     for i in range(len(fileOwners)):
         threadFailed.append(False)
     threadFailedLock.release()
@@ -163,4 +164,6 @@ def completeFileRequest(fileName, fileInfo):
     writeToFile("../files/received.png", chunkData, fileSize)
     
     downloadEnd = datetime.time()
-    print(f"The file was downloaded with a speed of {fileSize/(downloadEnd.second-downloadStart.second)} bytes per second")
+    time = downloadEnd.second - downloadStart.second
+    speed = fileSize / time if time != 0 else fileSize
+    print(f"The file was downloaded with a speed of {speed} bytes per second")
