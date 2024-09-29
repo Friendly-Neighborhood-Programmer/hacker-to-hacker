@@ -18,7 +18,7 @@ def send_data(c, fileName, chunkSet):
             #upFile.seek(chunkSet[0] * 256)
             upFile.seek(chunkSet[0] * 512)
 
-            while index <= chunkRange + chunkSet[0]:
+            while index < chunkRange + chunkSet[0]:
                 data = upFile.read(512)
                 #data = upFile.read(256)
                 #wrapper = FileChunk(index, 256, data)

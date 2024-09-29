@@ -15,6 +15,7 @@ def openDownloadSocket(targetIp, targetPortNumber):
     return s
 
 def requestPeerData(s,chunkRange):
+    print("ChunkRangeinPeerData:",chunkRange)
     try:
         chunkSet = {}
         #chunk = s.recv(2048)
@@ -38,17 +39,20 @@ def requestPeerData(s,chunkRange):
 def writeToFile(fileName, chunkData, fileSize):
     with open(fileName, 'wb') as downFile:
         byteStream = b""
-        print(chunkData)
+        
+        #print(chunkData)
         for i in range(0, math.ceil(fileSize/512)):
             byteStream += chunkData[i]
 
         downFile.write(byteStream)
 
 def combinedSocket(targetIp,targetPortNumber,fileName,chunkRange,threadID):
+    print("ChunkRangeinCominedSocket:",chunkRange)
     s = openDownloadSocket(targetIp, targetPortNumber)
     req = RequestMessage(fileName, chunkRange)
     s.send(req.serialize())
     newData = requestPeerData(s,chunkRange)
+    #print("TargetIP:",targetIp)
 
     global threadFailedLock
     threadFailedLock.acquire()
@@ -60,6 +64,9 @@ def combinedSocket(targetIp,targetPortNumber,fileName,chunkRange,threadID):
     chunkDataLock.acquire()
     global chunkData
     chunkData.update(newData)
+    with open(f"./logs{threadID}.data", "w") as logs:
+        logs.write(str(newData))
+        
     chunkDataLock.release()
 
     s.close()
@@ -72,6 +79,9 @@ def completeFileRequest(fileName, fileInfo):
     #Calculate chunk count and chunks per person
     chunkCount = math.ceil(fileSize / 512)
     chunksPerPerson = math.ceil(chunkCount / len(fileOwners))
+    print("chunkscount",chunkCount)
+    print("chunks per person",chunksPerPerson)
+    print("file own",len(fileOwners))
 
     #Fill the thread failed array
     global threadFailedLock
@@ -88,18 +98,20 @@ def completeFileRequest(fileName, fileInfo):
     while continueLooping:
 
         threadFailedLock.acquire()
-
-        #Make sure that we don't go past the chunk count
-        upperBoundChunk = currentChunk+chunksPerPerson
-        if (upperBoundChunk > chunkCount):
-            upperBoundChunk = chunkCount
         
         for i in range(len(fileOwners)):
-            
+              #Make sure that we don't go past the chunk count
+            upperBoundChunk = currentChunk+chunksPerPerson
+            if (upperBoundChunk > chunkCount):
+                upperBoundChunk = chunkCount
+            if (currentChunk> chunkCount):
+                currentChunk = chunkCount
             #If it is the first time create one thread for each
             fileIP = fileOwners[i][0]
             filePort = fileOwners[i][1]
             chunkRange = (currentChunk,upperBoundChunk)
+            print("i:",i)
+            print("chunkRange:",chunkRange)
             if (threadFailed[i] == False) and True not in threadFailed:
                 curThread =threading.Thread(target=combinedSocket, args=(fileIP,filePort,fileName,chunkRange,i))
                 threadList.append(curThread)
@@ -116,7 +128,7 @@ def completeFileRequest(fileName, fileInfo):
                 curThread.start()
 
             #Increase the current chunk
-            currentChunk = currentChunk + chunksPerPerson + 1
+            currentChunk = currentChunk + chunksPerPerson
             print("Chunks per person")
             print(chunksPerPerson)
         threadFailedLock.release()
