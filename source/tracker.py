@@ -7,10 +7,6 @@ import threading
 from threading import Lock
 import time
 
-#For storage have one dict that has keys of ips, values of users
-#one dict that has keys of files and and values of users
-#For removing user from network, use first dict to find which files they have
-#use that to remove them from other dict
 
 files = {}
 users = {}
@@ -48,8 +44,6 @@ def connectSocket(portNumber):
         
         c, a = s.accept()
         
-        #Need ip, port, list of filenames and sizes
-        #will be recieving User object
         userData = b''
         while True:
             data = c.recv(512)
@@ -108,6 +102,7 @@ def disconnectUsers():
         print("Disconnect unlocked")
         global files
         global userTimestamps
+        removedUsers = []
         for user in userTimestamps:
             if (userTimestamps[user] + userTimeoutLength) < datetime.now():
                 #Remove the user from the network
@@ -121,19 +116,19 @@ def disconnectUsers():
                             updatedUsers.append(socket)
                             
                     files[file.name] = (files[file.name][0], updatedUsers)
-                    print(files[file.name][1])
-                    #files[file][1].remove(lambda x: x[0] == user)
+                    if (len(files[file.name][1]) == 0):
+                        print("No users have " + file.name)
+                        del files[file.name]
+                
+                removedUsers.append(user)
+                del users[user]
+        for removed in removedUsers:
+            del userTimestamps[removed]
+        print(files)
+        print(users)
+        print(userTimestamps)
         timestampsLock.release()
         time.sleep(15)
-
-# def testLock():
-#     while True:
-#         global timestampsLock
-#         timestampsLock.acquire()
-#         global userTimestamps
-#         print(userTimestamps)
-#         timestampsLock.release()
-#         time.sleep(5)
 
 if __name__ == "__main__":
     try:
