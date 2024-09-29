@@ -21,10 +21,13 @@ def requestPeerData(s,chunkRange):
         #chunk = s.recv(2048)
         chunk = s.recv(512)
         index = chunkRange[0]
-        while chunk:
+        while chunk and (index<chunkRange[1]):
             #chunk = FileChunk.deserialize(chunk)
             #chunkSet[chunk.index] = chunk
+            # if index > chunkRange[1]:
+            #    continue
             chunkSet[index] = chunk
+            print("index:",index)
             #chunk = s.recv(2048)
             chunk = s.recv(512)
             index = index+1
@@ -34,6 +37,7 @@ def requestPeerData(s,chunkRange):
 
     except Exception as e:
         s.close()
+        print("EXCEPTION______________________:",e)
         return chunkSet
 
 def writeToFile(fileName, chunkData, fileSize):

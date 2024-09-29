@@ -191,6 +191,7 @@ def main():
         newThread = threading.Thread(target=completeFileRequest, args=(fileName,networkFiles[fileName]))
         newThread.daemon = True
         newThread.start()
+        newThread.join()
 
 
 if __name__ == '__main__':
