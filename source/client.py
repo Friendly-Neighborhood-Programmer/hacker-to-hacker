@@ -163,11 +163,10 @@ def main():
     t1.daemon = True
     t1.start()
 
-    userInput = promptUser()
-        
-    while userInput != "q":
+    while True:
         ### add status to network before start
         
+        userInput = promptUser()
         match userInput:
             case "1":
                 global networkFilesLock
@@ -175,34 +174,40 @@ def main():
                 prettyPrint(networkFiles)
                 networkFilesLock.release()
                 break
-            case "2":
-                networkFilesLock.acquire()
-                if not userInput in networkFiles:
-                    print("File not found in network")
-                    continue
 
-                newThread = threading.Thread(target=completeFileRequest, args=(userInput, networkFiles[userInput]))
+            case "2":
+                fileName = input("Name of the file you would like to download: ")
+                networkFilesLock.acquire()
+                if not fileName in networkFiles:
+                    print("File not found on the Hacker Network, enter the name of a valid file\n")
+                    break
+
+                newThread = threading.Thread(target=completeFileRequest, args=(fileName, networkFiles[fileName]))
                 newThread.daemon = True
                 newThread.start()
                 # newThread.join() # maybe this will allow multiple at once?
                 break
-            case other:
-                print("Please enter a valid option")
 
-        userInput = promptUser()
+            case "q":
+                print("Leaving the Hacker Network...")
+                exit()
+
+            case _:
+                print("Please enter a valid option\n")
 
 def promptUser():
-    input("Welcome to Hacker-to-Hacker\n" \
+    return input("Welcome to Hacker-to-Hacker\n" \
         "a file sharing system for hackers around the world. Here are your options:\n" \
         "(1) View files available on the network.\n" \
         "(2) Begin download of a file.\n" \
         "(q) to to quit.\n")
 
 def prettyPrint(networkFiles):  
+    print("Files available for download:")
     for key, value in networkFiles.items():
         print(f"File: {key}")
         print(f"Size: {value[0]} bytes\n")
-        print(f"Available sources ({len(value[1])}):")
+        print(f"Sources ({len(value[1])}):")
         for owner in value[1]:
             print(f"{owner[0]}:{owner[1]}\n\n")
 
