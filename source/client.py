@@ -175,7 +175,7 @@ def main():
         global networkFilesLock
         networkFilesLock.acquire()
         print("These are the availible files: ")
-        for key, value in currentNetworkFiles.tems():
+        for key, value in networkFiles.items():
             print(FileByteStream(key).name)
         networkFilesLock.release()
         
