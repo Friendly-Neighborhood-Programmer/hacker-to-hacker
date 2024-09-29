@@ -150,8 +150,10 @@ def loopPing():
     global networkFiles
     while True:
         pingTracker()
-        print('in loop')
-        print(networkFiles)
+        global networkFilesLock
+        networkFilesLock.acquire()
+        prettyPrint(networkFiles)
+        networkFilesLock.release()
         sleep(10)
 
 def main():
@@ -193,6 +195,14 @@ def main():
         newThread.start()
         newThread.join()
 
+def prettyPrint(networkFiles):
+    for key, value in networkFiles.items():
+        print(f"File: {key}")
+        print(f"Size: {value[0]} bytes")
+        print("Available sources:")
+        for owner in value[1]:
+            print(f"{owner[0]}:{owner[1]}")
+        print()
 
 if __name__ == '__main__':
     main()
