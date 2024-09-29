@@ -79,8 +79,8 @@ def pingTracker():
         while True:
             data = s.recv(512)
             if not data:
-                print("Connection Closed.")
-                print("Finished Receiving Network Files.")
+                # print("Connection Closed.")
+                # print("Finished Receiving Network Files.")
                 break
             currentNetworkFiles += data
         
@@ -163,6 +163,8 @@ def main():
     t1.daemon = True
     t1.start()
 
+    print("\nWelcome to the Hacker-to-Hacker Network, a file sharing service for hackers around the world!\n")
+
     while True:
         ### add status to network before start
         
@@ -200,8 +202,7 @@ def main():
     exit()
 
 def promptUser():
-    return input("Welcome to Hacker-to-Hacker\n" \
-        "a file sharing system for hackers around the world. Here are your options:\n" \
+    return input("Here are your options:\n" \
         "(1) View files available on the network.\n" \
         "(2) Begin download of a file.\n" \
         "(q) to to quit.\n")
