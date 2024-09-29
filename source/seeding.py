@@ -12,15 +12,26 @@ def openUploadSocket(portNumber, ip):
 def send_data(c, fileName, chunkSet):
     try:
         
-        with open(filename, 'rb') as upFile:
+        with open(f'../files/{fileName}', 'rb') as upFile:
             index = 0 + chunkSet[0]
             chunkRange = chunkSet[-1] - chunkSet[0]
-            upFile.seek(chunkSet[0] * 256)
+            #upFile.seek(chunkSet[0] * 256)
+            upFile.seek(chunkSet[0] * 512)
 
-            while index < chunkSet[0] + chunkRange:
-                data = upFile.read(256)
-                wrapper = FileChunk(index, 256, hashData(data), data)
-                c.send(data.serialize())
+            print(index, chunkRange, chunkSet[0], chunkSet)
+
+            while index < chunkRange + chunkSet[0]:
+                data = upFile.read(512)
+                #data = upFile.read(256)
+                print(len(data))
+                print(data)
+                #wrapper = FileChunk(index, 256, data)
+                #print(wrapper)
+                #print(wrapper.index)
+                #print(len(wrapper.serialize()))
+
+                #c.send(wrapper.serialize())
+                c.send(data)
                 index = index + 1
 
             c.shutdown(2)
@@ -31,10 +42,11 @@ def send_data(c, fileName, chunkSet):
         c.shutdown(2)
         c.close()
 
-def awaitUploadRequest():
+def awaitUploadRequest(ip,port):
     # debug
-    s = openUploadSocket(50001, "localhost")
-    # s = openUploadSocket(50001, getLANIP())
+    #s = openUploadSocket(50001, "localhost")
+    #s = openUploadSocket(50001, getLANIP())
+    s = openUploadSocket(port, ip)
     while True:
         print("Awaiting upload request")
         connection, address = s.accept()
@@ -43,6 +55,7 @@ def awaitUploadRequest():
         send_data(connection, requestMessage.fileName, requestMessage.chunks)
 
 def hashData(data):
-    h = hasjlib.blake2b()
-    h.update(data)
-    return h.hexdigest()
+    # h = hashlib.blake2b()
+    # h.update(data)
+    # return h.hexdigest()
+    return data

@@ -4,11 +4,8 @@ from struct import *
 from client import *
 
 try:
-    if input("Do you want to seed? (y/n): ") == 'y':
-        awaitUploadRequest()
-    else:
-        pingTracker()
-        completeFileRequest("../files/tosend.png", fileInfo)
+    awaitUploadRequest()
+        
 
 except KeyboardInterrupt:
     #run override code
