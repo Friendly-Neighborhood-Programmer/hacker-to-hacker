@@ -161,9 +161,9 @@ def main():
     pingServer.daemon = True
     pingServer.start()
 
-    # t1 = threading.Thread(target=awaitUploadRequest)
-    # t1.daemon = True
-    # t1.start()
+    t1 = threading.Thread(target=awaitUploadRequest)
+    t1.daemon = True
+    t1.start()
 
     # while True:
     #     sleep(5)
@@ -183,9 +183,7 @@ def main():
         if (fileName == 'q'):
             break
 
-        global networkFilesLock
         networkFilesLock.acquire()
-        global networkFiles
         if not key in networkFiles:
             print("File not found in network")
             continue
