@@ -150,10 +150,6 @@ def loopPing():
     global networkFiles
     while True:
         pingTracker()
-        global networkFilesLock
-        networkFilesLock.acquire()
-        prettyPrint(networkFiles)
-        networkFilesLock.release()
         sleep(10)
 
 def main():
@@ -167,42 +163,48 @@ def main():
     t1.daemon = True
     t1.start()
 
-    # while True:
-    #     sleep(5)
-    #     completeFileRequest("../files/test_2048.txt", networkFiles["test_2048.txt"])
-
-    #     sleep(5)
+    userInput = promptUser()
         
-    while True:
-        #global networkFilesLock
-        #networkFilesLock.acquire()
-        #print("These are the availible files: ")
-        #for key, value in networkFiles.items():
-        #    print((FileByteStream(key)).name)
-        #networkFilesLock.release()
+    while userInput != "q":
+        ### add status to network before start
         
-        fileName = input("Which file would you like to download? or type q to quit: ")
-        if (fileName == 'q'):
-            break
+        match userInput:
+            case "1":
+                global networkFilesLock
+                networkFilesLock.acquire()
+                prettyPrint(networkFiles)
+                networkFilesLock.release()
+                break
+            case "2":
+                networkFilesLock.acquire()
+                if not userInput in networkFiles:
+                    print("File not found in network")
+                    continue
 
-        networkFilesLock.acquire()
-        if not fileName in networkFiles:
-            print("File not found in network")
-            continue
+                newThread = threading.Thread(target=completeFileRequest, args=(userInput, networkFiles[userInput]))
+                newThread.daemon = True
+                newThread.start()
+                # newThread.join() # maybe this will allow multiple at once?
+                break
+            case other:
+                print("Please enter a valid option")
 
-        newThread = threading.Thread(target=completeFileRequest, args=(fileName,networkFiles[fileName]))
-        newThread.daemon = True
-        newThread.start()
-        newThread.join()
+        userInput = promptUser()
 
-def prettyPrint(networkFiles):
+def promptUser():
+    input("Welcome to Hacker-to-Hacker\n" \
+        "a file sharing system for hackers around the world. Here are your options:\n" \
+        "(1) View files available on the network.\n" \
+        "(2) Begin download of a file.\n" \
+        "(q) to to quit.\n")
+
+def prettyPrint(networkFiles):  
     for key, value in networkFiles.items():
         print(f"File: {key}")
-        print(f"Size: {value[0]} bytes")
-        print("Available sources:")
+        print(f"Size: {value[0]} bytes\n")
+        print(f"Available sources ({len(value[1])}):")
         for owner in value[1]:
-            print(f"{owner[0]}:{owner[1]}")
-        print()
+            print(f"{owner[0]}:{owner[1]}\n\n")
 
 if __name__ == '__main__':
     main()
