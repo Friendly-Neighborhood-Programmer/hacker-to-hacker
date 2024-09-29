@@ -15,15 +15,23 @@ def send_data(c, fileName, chunkSet):
         with open(fileName, 'rb') as upFile:
             index = 0 + chunkSet[0]
             chunkRange = chunkSet[-1] - chunkSet[0]
-            upFile.seek(chunkSet[0] * 256)
+            #upFile.seek(chunkSet[0] * 256)
+            upFile.seek(chunkSet[0] * 512)
 
             print(index, chunkRange, chunkSet[0], chunkSet)
 
             while index < 8:
-                data = upFile.read(256)
+                data = upFile.read(512)
+                #data = upFile.read(256)
+                print(len(data))
                 print(data)
-                wrapper = FileChunk(index, 256, hashData(data), data)
-                c.send(wrapper.serialize())
+                #wrapper = FileChunk(index, 256, data)
+                #print(wrapper)
+                #print(wrapper.index)
+                #print(len(wrapper.serialize()))
+
+                #c.send(wrapper.serialize())
+                c.send(data)
                 index = index + 1
 
             c.shutdown(2)

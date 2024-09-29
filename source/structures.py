@@ -26,10 +26,10 @@ class FileByteStream:
 
 
 class FileChunk:
-    def __init__(self, index, size, hash, data):
+    def __init__(self, index, size, data):
         self.index = index
         self.size = size
-        self.hash = hash # todo implement hash later
+        # self.hash = hash # todo implement hash later
         self.data = data
 
     def serialize(self):

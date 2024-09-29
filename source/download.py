@@ -1,6 +1,12 @@
 import socket
 import math
 from structures import FileByteStream, FileChunk, RequestMessage
+from threading import Lock
+import threading
+threadFailed = []
+threadFailedLock = Lock()
+chunkData = {}
+chunkDataLock = Lock()
 
 def openDownloadSocket(targetIp, targetPortNumber):
     print("Opening download socket")
@@ -9,21 +15,22 @@ def openDownloadSocket(targetIp, targetPortNumber):
     print(targetIp, targetPortNumber, s)
     return s
 
-def requestPeerData(s):
+def requestPeerData(s,chunkRange):
     try:
         chunkSet = {}
+        #chunk = s.recv(2048)
         chunk = s.recv(512)
-        print(chunk)
-
+        index = chunkRange[0]
         while chunk:
-            print("looping")
+            #chunk = FileChunk.deserialize(chunk)
             print(chunk)
-            print('pass')
-
-            chunk = FileChunk.deserialize(chunk)
-            print(chunk)
-            chunkSet[chunk.index] = chunk
+            #print("index:", chunk.index)
+            #chunkSet[chunk.index] = chunk
+            chunkSet[index] = chunk
+            #chunk = s.recv(2048)
             chunk = s.recv(512)
+            print("last",chunk)
+            index = index+1
 
         s.close()
         print('return')
@@ -36,26 +43,97 @@ def requestPeerData(s):
 
 def writeToFile(fileName, chunkData, fileSize):
     with open(fileName, 'wb') as downFile:
-        byteStream = []
+        byteStream = b""
         print(chunkData)
-        for i in range(0, fileSize//256):
-            byteStream.append(chunkData[i].data)
+        for i in range(0, math.ceil(fileSize/512)):
+            byteStream += chunkData[i]
 
-        fileToDownload.write(byteStream)
+        downFile.write(byteStream)
+
+def combinedSocket(targetIp,targetPortNumber,fileName,chunkRange,threadID):
+    s = openDownloadSocket(targetIp, targetPortNumber)
+    req = RequestMessage(fileName, chunkRange)
+    s.send(req.serialize())
+    newData = requestPeerData(s,chunkRange)
+
+    global threadFailedLock
+    threadFailedLock.acquire()
+    global threadFailed
+    threadFailed[threadID] = True
+    threadFailedLock.release()
+
+    global chunkDataLock
+    chunkDataLock.acquire()
+    global chunkData
+    chunkData.append(newData)
+    chunkDataLock.release()
+
+    s.close()
 
 def completeFileRequest(fileName, fileInfo):
-    fileSize, fileOwners = fileInfo[0], fileInfo[1]
-    # chunk algorithm here
-    # get the targetIp, targetPortNumber and chunkSet from algorithm
-    chunkSet = [0, 100]
-    fileName = "../files/test_2048.txt"
-    targetIp = "localhost"
-    targetPortNumber = 50001
-    s = openDownloadSocket(targetIp, targetPortNumber)
-    req = RequestMessage(fileName, chunkSet)
-    s.send(req.serialize())
+        #File size and owner
+    fileSize = fileInfo[0]
+    fileOwners = fileInfo[1]
+
+    #Calculate chunk count and chunks per person
+    chunkCount = math.ceil(fileSize / 256)
+    chunksPerPerson = math.ceil(chunkCount / len(fileOwners))
+
+    #Fill the thread failed array
+    global threadFailedLock
+    threadFailedLock.acquire()
+    global threadFailed
+    for i in range(len(fileOwners)):
+        threadFailed.append(False)
+    threadFailedLock.release()
+    
+    threadList = []
+    currentChunk = 0
+
+    continueLooping = True
+    while continueLooping:
+
+        threadFailedLock.acquire()
+
+        #Make sure that we don't go past the chunk count
+        upperBoundChunk = currentChunk+chunksPerPerson
+        if (upperBoundChunk > chunkCount):
+            upperBoundChunk = chunkCount
+        
+        for i in range(len(fileOwners)):
+            
+            #If it is the first time create one thread for each
+            if (threadFailed[i] == False) and True not in threadFailed:
+                threadList[i] = threading.Thread(target=combinedSocket, args=(fileOwners[i][0],fileOwners[i][1],fileName,[currentChunk,upperBoundChunk],i))
+            else:
+                #Shift all failed threads chunks to the next person in order
+                index = i + 1
+                if index >= len(fileOwners):
+                    index = 0
+                threadFailed[index] = False
+                threadList[i] = threading.Thread(target=combinedSocket, args=(fileOwners[index][0],fileOwners[index][1],fileName,[currentChunk,upperBoundChunk],index))
+
+            #Increase the current chunk
+            currentChunk = currentChunk + chunksPerPerson + 1
+        threadFailedLock.release()
+
+        #Wait for all threads to finish
+        for i in range(len(threadList)):
+            threadList[i].join(timeout=10) 
+
+        #Look to see if we continue looping
+        threadFailedLock.acquire()
+        threadFailed
+        if False in threadFailed:
+            continueLooping = True
+        else:
+            continueLooping = False
+        threadFailedLock.release()
+
+        #Clear the previous data
+        currentChunk = 0
+        threadList = []
+   
 
     # put this in while loop
-    chunkData = requestPeerData(s)
-    s.close()
     writeToFile("../files/received.txt", chunkData, fileSize)

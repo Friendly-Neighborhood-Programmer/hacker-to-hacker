@@ -4,10 +4,7 @@ from struct import *
 from client import *
 
 try:
-    if input("Do you want to seed? (y/n): ") == 'y':
-        awaitUploadRequest()
-    else:
-        pingTracker()
+    awaitUploadRequest()
         
 
 except KeyboardInterrupt:
