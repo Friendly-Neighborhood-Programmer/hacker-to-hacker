@@ -6,11 +6,12 @@ import pickle as pkl
 from threading import Lock
 from download import completeFileRequest
 from time import sleep
+from seeding import awaitUploadRequest
 
 networkFiles = {}
 networkFilesLock = Lock()
 
-LOCAL_UPLOAD_PORT = None
+LOCAL_UPLOAD_PORT = 50001
 LOCAL_IP = None
 
 def getLANIP():
@@ -131,8 +132,6 @@ def testing():
         #     ...
         # if (userInput == "q"):
         #     ...
-            
-                
         # #TODO request to tracker for socket
                 
         # #temporary solution to no tracker
@@ -162,25 +161,38 @@ def main():
     pingServer.daemon = True
     pingServer.start()
 
-    while True:
-        sleep(5)
-        completeFileRequest("../files/test_2048.txt", networkFiles["test_2048.txt"])
-        sleep(5)
-        
+    # t1 = threading.Thread(target=awaitUploadRequest)
+    # t1.daemon = True
+    # t1.start()
+
     # while True:
-    #     global networkFilesLock
-    #     networkFilesLock.acquire()
-    #     print("These are the availible files: ")
-    #     for key, value in currentNetworkFiles.tems():
-    #         print(FileByteStream(key).name)
-    #     networkFilesLock.release()
+    #     sleep(5)
+    #     completeFileRequest("../files/test_2048.txt", networkFiles["test_2048.txt"])
+
+    #     sleep(5)
         
-    #     fileName = input("Which file would you like to download? or type q to quit: ")
-    #     if (fileName == 'q'):
-    #         break
-    #     newThread = threading.Thread(target=completeFileRequest, args=(fileName))
-    #     newThread.daemon = True
-    #     newThread.start()
+    while True:
+        global networkFilesLock
+        networkFilesLock.acquire()
+        print("These are the availible files: ")
+        for key, value in currentNetworkFiles.tems():
+            print(FileByteStream(key).name)
+        networkFilesLock.release()
+        
+        fileName = input("Which file would you like to download? or type q to quit: ")
+        if (fileName == 'q'):
+            break
+
+        global networkFilesLock
+        networkFilesLock.acquire()
+        global networkFiles
+        if not key in networkFiles:
+            print("File not found in network")
+            continue
+
+        newThread = threading.Thread(target=completeFileRequest, args=(fileName,networkFiles[fileName]))
+        newThread.daemon = True
+        newThread.start()
 
 
 if __name__ == '__main__':
