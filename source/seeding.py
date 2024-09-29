@@ -18,17 +18,10 @@ def send_data(c, fileName, chunkSet):
             #upFile.seek(chunkSet[0] * 256)
             upFile.seek(chunkSet[0] * 512)
 
-            print(index, chunkRange, chunkSet[0], chunkSet)
-
-            while index < chunkRange + chunkSet[0]:
+            while index <= chunkRange + chunkSet[0]:
                 data = upFile.read(512)
                 #data = upFile.read(256)
-                print(len(data))
-                print(data)
                 #wrapper = FileChunk(index, 256, data)
-                #print(wrapper)
-                #print(wrapper.index)
-                #print(len(wrapper.serialize()))
 
                 #c.send(wrapper.serialize())
                 c.send(data)
@@ -48,7 +41,6 @@ def awaitUploadRequest(ip,port):
     #s = openUploadSocket(50001, getLANIP())
     s = openUploadSocket(port, ip)
     while True:
-        print("Awaiting upload request")
         connection, address = s.accept()
         messageBytes = connection.recv(512)
         requestMessage = RequestMessage.deserialize(messageBytes)
