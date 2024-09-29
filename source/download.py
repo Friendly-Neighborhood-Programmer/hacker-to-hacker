@@ -3,6 +3,7 @@ import math
 from structures import FileByteStream, FileChunk, RequestMessage
 from threading import Lock
 import threading
+import datetime
 
 threadFailed = []
 threadFailedLock = Lock()
@@ -76,7 +77,7 @@ def combinedSocket(targetIp,targetPortNumber,fileName,chunkRange,threadID):
     s.close()
 
 def completeFileRequest(fileName, fileInfo):
-        #File size and owner
+    #File size and owner
     fileSize = fileInfo[0]
     fileOwners = fileInfo[1]
 
@@ -97,6 +98,9 @@ def completeFileRequest(fileName, fileInfo):
     
     threadList = []
     currentChunk = 0
+
+    # start time of download
+    downloadStart = datetime.time()
 
     continueLooping = True
     while continueLooping:
@@ -157,3 +161,6 @@ def completeFileRequest(fileName, fileInfo):
 
     # put this in while loop
     writeToFile("../files/received.png", chunkData, fileSize)
+    
+    downloadEnd = datetime.time()
+    print(f"The file was downloaded with a speed of {fileSize/(downloadEnd.second-downloadStart.second)} bytes per second")
