@@ -38,7 +38,7 @@ def requestPeerData(s,chunkRange):
 def writeToFile(fileName, chunkData, fileSize):
     with open(fileName, 'wb') as downFile:
         byteStream = b""
-
+        print(chunkData)
         for i in range(0, math.ceil(fileSize/512)):
             byteStream += chunkData[i]
 
