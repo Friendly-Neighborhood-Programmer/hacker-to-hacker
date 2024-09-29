@@ -42,10 +42,11 @@ def send_data(c, fileName, chunkSet):
         c.shutdown(2)
         c.close()
 
-def awaitUploadRequest():
+def awaitUploadRequest(ip,port):
     # debug
-    s = openUploadSocket(50001, "localhost")
-    # s = openUploadSocket(50001, getLANIP())
+    #s = openUploadSocket(50001, "localhost")
+    #s = openUploadSocket(50001, getLANIP())
+    s = openUploadSocket(port, ip)
     while True:
         print("Awaiting upload request")
         connection, address = s.accept()

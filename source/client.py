@@ -160,8 +160,8 @@ def main():
     pingServer = threading.Thread(target=loopPing, args=())
     pingServer.daemon = True
     pingServer.start()
-
-    t1 = threading.Thread(target=awaitUploadRequest)
+    LOCAL_IP = getLANIP()
+    t1 = threading.Thread(target=awaitUploadRequest,args=(LOCAL_IP,LOCAL_UPLOAD_PORT))
     t1.daemon = True
     t1.start()
 
@@ -184,7 +184,7 @@ def main():
             break
 
         networkFilesLock.acquire()
-        if not key in networkFiles:
+        if not fileName in networkFiles:
             print("File not found in network")
             continue
 

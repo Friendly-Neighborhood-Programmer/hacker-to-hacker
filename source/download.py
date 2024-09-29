@@ -12,6 +12,9 @@ chunkDataLock = Lock()
 def openDownloadSocket(targetIp, targetPortNumber):
     print("Opening download socket")
     s = socket.socket()
+    print(targetIp)
+    print(targetPortNumber)
+    
     s.connect((targetIp, targetPortNumber))
     print(targetIp, targetPortNumber, s)
     return s
