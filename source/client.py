@@ -176,7 +176,7 @@ def main():
         networkFilesLock.acquire()
         print("These are the availible files: ")
         for key, value in networkFiles.items():
-            print(FileByteStream(key).name)
+            print((FileByteStream(key)).name)
         networkFilesLock.release()
         
         fileName = input("Which file would you like to download? or type q to quit: ")

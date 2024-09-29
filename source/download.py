@@ -14,7 +14,7 @@ def openDownloadSocket(targetIp, targetPortNumber):
     s = socket.socket()
     print(targetIp)
     print(targetPortNumber)
-    
+
     s.connect((targetIp, targetPortNumber))
     print(targetIp, targetPortNumber, s)
     return s
@@ -70,7 +70,7 @@ def combinedSocket(targetIp,targetPortNumber,fileName,chunkRange,threadID):
     global chunkDataLock
     chunkDataLock.acquire()
     global chunkData
-    chunkData.append(newData)
+    chunkData.update(newData)
     chunkDataLock.release()
 
     s.close()
@@ -156,4 +156,4 @@ def completeFileRequest(fileName, fileInfo):
    
 
     # put this in while loop
-    writeToFile("../files/received.txt", chunkData, fileSize)
+    writeToFile("../files/received.png", chunkData, fileSize)
