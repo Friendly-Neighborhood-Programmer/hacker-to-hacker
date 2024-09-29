@@ -41,6 +41,8 @@ def connectSocket(portNumber):
     print("File requests socket is open")
     s = socket.socket()
     s.bind((getLANIP(), portNumber))
+    
+    print("Connect socket")
     while True:
         s.listen(1)
         
@@ -51,7 +53,6 @@ def connectSocket(portNumber):
         userData = b''
         while True:
             data = c.recv(512)
-            print(data)
             if data == b"DONE":
                 print("All data recieved")
                 break
@@ -86,6 +87,7 @@ def connectSocket(portNumber):
         global userTimestamps    
         #Update user's timestamp
         userTimestamps.update({acceptedUser.ip:datetime.now()})
+        print(userTimestamps)
         timestampsLock.release()
             
         #Send all files on the network back to the client
@@ -104,33 +106,40 @@ def disconnectUsers():
         global timestampsLock
         timestampsLock.acquire()
         print("Disconnect unlocked")
+        global files
         global userTimestamps
         for user in userTimestamps:
             if (userTimestamps[user] + userTimeoutLength) < datetime.now():
                 #Remove the user from the network
                 print("Removed: " + user)
-                for file in users[user].files:
-                    files[file].remove(user)
+                for file in users[user]:
+                    print(files[file.name])
+                    
+                    updatedUsers = []
+                    for socket in files[file.name][1]:
+                        if socket[0] != user:
+                            updatedUsers.append(socket)
+                            
+                    files[file.name] = (files[file.name][0], updatedUsers)
+                    print(files[file.name][1])
+                    #files[file][1].remove(lambda x: x[0] == user)
         timestampsLock.release()
         time.sleep(15)
 
-# userTimestamps.update({"12.345":datetime.now()})
-
-def testLock():
-    while True:
-        global timestampsLock
-        timestampsLock.acquire()
-        global userTimestamps
-        print(userTimestamps)
-        timestampsLock.release()
-        time.sleep(5)
+# def testLock():
+#     while True:
+#         global timestampsLock
+#         timestampsLock.acquire()
+#         global userTimestamps
+#         print(userTimestamps)
+#         timestampsLock.release()
+#         time.sleep(5)
 
 if __name__ == "__main__":
     try:
         newThread = threading.Thread(target=disconnectUsers, args=())
         newThread.daemon = True
         newThread.start()
-        testLock()
-        # connectSocket(50000)
+        connectSocket(50000)
     except KeyboardInterrupt:
         print("override")
