@@ -9,7 +9,7 @@ From within the source directory run
 ```
 python client.py
 ```
-Follow the instructions on screen
+Follow the instructions on screen 
 
 ## Inspiration: 
 With the rise of decentralized technologies, we wanted to explore the foundations of peer-to-peer (P2P) networks. We set out to build a fully functioning P2P network from scratch using Python. Our goal was to create a basic yet robust system that could handle the decentralized exchange of data between peers, without relying on a central server.
